@@ -33,7 +33,12 @@ exports.handleNewSignup = functions.database.ref('/emailList/{pushId}').onCreate
             to: newUser.email,
             subject: '[briefing group] Welcome to the Briefing Group',
             text: `Hello ${newUser.name},\n\nYou have been successfully added to the email list.`,
-        });
+        }, (error, info) => {
+            if (error) {
+                console.log('Error sending email:', error);
+            } else {
+                console.log('Email sent successfully:', info.response);
+            }});
     } else {
         const approver = getNextApprover(emailList);
         await transporter.sendMail({
