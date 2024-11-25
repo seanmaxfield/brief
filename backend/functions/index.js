@@ -8,7 +8,7 @@ const db = admin.database();
 const emailListRef = db.ref('emailList');
 const articlesRef = db.ref('articles');
 
-// Configure nodemailer
+// Configure Nodemailer
 const transporter = nodemailer.createTransport({
     host: 'mail.macalesterstreet.org',
     port: 465,
@@ -19,20 +19,20 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// On new email list signup
+// Function: Send Welcome Email
 exports.handleNewSignup = functions.database.ref('/emailList/{pushId}').onCreate(async (snapshot) => {
     const newUser = snapshot.val();
 
-    // Update the user's status to approved
+    // Update user's status to approved
     await snapshot.ref.update({ ...newUser, status: 'approved' });
 
-    // Send a welcome email
+    // Send Welcome Email
     try {
         await transporter.sendMail({
             from: 'closed_briefing@macalesterstreet.org',
             to: newUser.email,
-            subject: '[briefing group] Welcome to the Briefing Group',
-            text: `Hello ${newUser.name},\n\nWelcome to the Briefing Group -- You have been successfully added to the email list.\n\nBest regards\n`,
+            subject: '[Briefing Group] Welcome to the Email List',
+            text: `Hello ${newUser.name},\n\nWelcome to the Briefing Group! You have been successfully added to the email list.\n\nBest regards,\nThe Briefing Group Team`,
         });
         console.log(`Welcome email sent to ${newUser.email}`);
     } catch (error) {
@@ -40,7 +40,7 @@ exports.handleNewSignup = functions.database.ref('/emailList/{pushId}').onCreate
     }
 });
 
-
+// Function: Send Article Email
 exports.onNewArticle = functions.database.ref('/articles/{pushId}').onCreate(async (snapshot) => {
     const article = snapshot.val();
 
