@@ -8,12 +8,12 @@ const emailListRef = db.ref('emailList');
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
-    host: 'smtp.aol.com', // Outlook SMTP server
-    port: 587,                  // SMTP port for STARTTLS
-    secure: false,              // Use STARTTLS instead of SSL
+    host: 'mail.macalesterstreet.org', // Outgoing SMTP server
+    port: 465,                         // SMTP Port (465 for SSL)
+    secure: true,                      // Use SSL/TLS
     auth: {
-        user: 'closed_briefing@aol.com',
-        pass: '6L)6&e@A7J3u/gB',
+        user: 'closed_briefing@macalesterstreet.org', // Email address
+        pass: 'Macalester20',                 // Email account's password
     },
 });
 
