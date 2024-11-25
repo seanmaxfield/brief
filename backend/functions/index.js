@@ -29,15 +29,15 @@ exports.handleNewSignup = functions.database.ref('/emailList/{pushId}').onCreate
 
         // Send confirmation email
         await transporter.sendMail({
-            from: 'your-email@gmail.com',
+            from: 'closed_briefing@macalesterstreet.org',
             to: newUser.email,
-            subject: 'Welcome to the Briefing Group!',
+            subject: '[briefing group] Welcome to the Briefing Group',
             text: `Hello ${newUser.name},\n\nYou have been successfully added to the email list.`,
         });
     } else {
         const approver = getNextApprover(emailList);
         await transporter.sendMail({
-            from: 'your-email@gmail.com',
+            from: 'closed_briefing@macalesterstreet.org',
             to: approver.email,
             subject: 'Approval Request',
             text: `Approve the new signup for ${newUser.name} (${newUser.email})? Reply with "approved".`,

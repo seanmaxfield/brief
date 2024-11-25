@@ -10,10 +10,17 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-transporter.verify((error, success) => {
+const mailOptions = {
+    from: 'closed_briefing@macalesterstreet.org',     // Sender's email address
+    to: 'smaxfiel@macalester.edu',                      // Recipient's email address
+    subject: 'Test Email from Macalester Street',     // Email subject
+    text: 'This is a test email sent using Nodemailer.', // Email body
+};
+
+transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-        console.log('Error:', error);
+        console.log('Error sending email:', error);
     } else {
-        console.log('Server is ready to take messages:', success);
+        console.log('Email sent successfully:', info.response);
     }
 });
