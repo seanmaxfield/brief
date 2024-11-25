@@ -6,6 +6,7 @@ admin.initializeApp();
 
 const db = admin.database();
 const emailListRef = db.ref('emailList');
+const articlesRef = db.ref('articles');
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
