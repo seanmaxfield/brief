@@ -8,10 +8,12 @@ const emailListRef = db.ref('emailList');
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.aol.com', // Outlook SMTP server
+    port: 587,                  // SMTP port for STARTTLS
+    secure: false,              // Use STARTTLS instead of SSL
     auth: {
-        user: 'your-email@gmail.com',
-        pass: 'your-email-password',
+        user: 'closed_briefing@aol.com',
+        pass: '6L)6&e@A7J3u/gB',
     },
 });
 
