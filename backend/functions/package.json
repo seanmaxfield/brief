@@ -1,0 +1,22 @@
+{
+    "name": "email-approval-backend",
+    "version": "1.0.0",
+    "description": "Backend for email approval system using Firebase Functions",
+    "main": "index.js",
+    "engines": {
+      "node": "16" 
+    },
+    "scripts": {
+      "start": "firebase emulators:start",
+      "deploy": "firebase deploy --only functions"
+    },
+    "dependencies": {
+      "firebase-admin": "^11.5.0",
+      "firebase-functions": "^4.3.0",
+      "nodemailer": "^6.9.4"
+    },
+    "devDependencies": {},
+    "author": "Your Name",
+    "license": "MIT"
+  }
+  

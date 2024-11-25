@@ -26,13 +26,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (signupForm) {
         signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const newMember = {
+            const newUser = {
                 name: e.target.name.value,
                 email: e.target.email.value,
                 affiliation: e.target.affiliation.value,
                 status: "pending"
             };
-            push(ref(db, 'emailList'), newMember);
+            push(ref(db, 'emailList'), newUser);
             alert('Signup request submitted successfully!');
             e.target.reset();
         });
