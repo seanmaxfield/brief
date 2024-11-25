@@ -1,52 +1,41 @@
-import { db } from './firebase.js';
-import { ref, push } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+const handleFormSubmit = async (formId, type) => {
+    const form = document.getElementById(formId);
+    if (!form) return; // Exit if form not found on the page
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Handle Article Submission
-    const articleForm = document.getElementById('articleForm');
-    if (articleForm) {
-        articleForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const article = {
-                title: e.target.title.value,
-                author: e.target.author.value,
-                email: e.target.email.value,
-                description: e.target.description.value,
-                articleText: e.target.articleText.value
-            };
-            // Push the article to the database
-            push(ref(db, 'articles'), article)
-                .then(() => {
-                    alert('Article submitted successfully!');
-                    e.target.reset();
-                })
-                .catch((error) => {
-                    console.error('Error submitting article:', error);
-                    alert('Failed to submit the article.');
-                });
-        });
-    }
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    // Handle Email List Signup
-    const signupForm = document.getElementById('signupForm');
-    if (signupForm) {
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newUser = {
-                name: e.target.name.value,
-                email: e.target.email.value,
-                affiliation: e.target.affiliation.value,
-                status: "approved" // Automatically approve the user
-            };
-            push(ref(db, 'emailList'), newUser)
-                .then(() => {
-                    alert('Signup request submitted successfully!');
-                    e.target.reset();
-                })
-                .catch((error) => {
-                    console.error('Error signing up user:', error);
-                    alert('Failed to sign up.');
-                });
+        const formData = new FormData(form);
+        const data = { type }; // Add the submission type (signup or article)
+        formData.forEach((value, key) => {
+            data[key] = value;
         });
+
+        try {
+            const response = await fetch('/handleFormSubmission', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const message = await response.text();
+            alert(message);
+
+            if (response.ok) {
+                form.reset();
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('Failed to submit form.');
+        }
+    });
+};
+
+// Detect the form on the page and attach the correct handler
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('signupForm')) {
+        handleFormSubmit('signupForm', 'signup');
+    } else if (document.getElementById('articleForm')) {
+        handleFormSubmit('articleForm', 'article');
     }
 });

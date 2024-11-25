@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const { mailConfig } = require('./config');
 
 admin.initializeApp();
 
@@ -8,78 +9,86 @@ const db = admin.database();
 const emailListRef = db.ref('emailList');
 const articlesRef = db.ref('articles');
 
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
-    host: 'mail.macalesterstreet.org',
-    port: 465,
-    secure: true,
-    auth: {
-        user: 'closed_briefing@macalesterstreet.org',
-        pass: 'Macalester20',
-    },
-});
+const transporter = nodemailer.createTransport(mailConfig);
 
-// Function: Send Welcome Email
-exports.handleNewSignup = functions.database.ref('/emailList/{pushId}').onCreate(async (snapshot) => {
-    const newUser = snapshot.val();
+exports.handleFormSubmission = functions.https.onRequest(async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).send('Method Not Allowed');
+    }
 
-    // Update user's status to approved
-    await snapshot.ref.update({ ...newUser, status: 'approved' });
+    const { type, ...data } = req.body;
 
-    // Send Welcome Email
+    if (!type || (type !== 'signup' && type !== 'article')) {
+        return res.status(400).send('Invalid submission type');
+    }
+
     try {
-        await transporter.sendMail({
-            from: 'closed_briefing@macalesterstreet.org',
-            to: newUser.email,
-            subject: '[Briefing Group] Welcome to the Email List',
-            text: `Hello ${newUser.name},\n\nWelcome to the Briefing Group! You have been successfully added to the email list.\n\nBest regards,\nThe Briefing Group Team`,
-        });
-        console.log(`Welcome email sent to ${newUser.email}`);
+        if (type === 'signup') {
+            await handleSignup(data, res);
+        } else if (type === 'article') {
+            await handleArticleSubmission(data, res);
+        }
     } catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error('Error processing form submission:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
-// Function: Send Article Email
-exports.onNewArticle = functions.database.ref('/articles/{pushId}').onCreate(async (snapshot) => {
-    const article = snapshot.val();
+async function handleSignup({ name, email, affiliation }, res) {
+    if (!name || !email || !affiliation) {
+        return res.status(400).send('Missing required fields');
+    }
 
-    // Fetch all approved users
+    const newUser = { name, email, affiliation, status: 'approved' };
+
+    await emailListRef.push(newUser);
+
+    await transporter.sendMail({
+        from: mailConfig.auth.user,
+        to: email,
+        subject: '[Briefing Group] Welcome to the Email List',
+        text: `Hello ${name},\n\nWelcome to the Briefing Group! You have been successfully added to the email list.\n\nBest regards,\nThe Briefing Group Team`,
+    });
+
+    res.status(200).send('Signup successful and welcome email sent.');
+}
+
+async function handleArticleSubmission({ title, author, email, description, articleText }, res) {
+    if (!title || !author || !email || !description || !articleText) {
+        return res.status(400).send('Missing required fields');
+    }
+
+    const newArticle = { title, author, email, description, articleText };
+
+    await articlesRef.push(newArticle);
+
     const emailListSnapshot = await emailListRef.once('value');
     const emailList = emailListSnapshot.val();
 
     if (!emailList) {
-        console.log('No approved users found.');
-        return;
+        return res.status(200).send('No approved users to notify.');
     }
 
-    // Filter approved users
     const approvedUsers = Object.values(emailList).filter(user => user.status === 'approved');
     const recipientEmails = approvedUsers.map(user => user.email);
 
     if (recipientEmails.length === 0) {
-        console.log('No approved users to send the article to.');
-        return;
+        return res.status(200).send('No approved users to notify.');
     }
 
-    // Prepare email content
     const emailContent = `
-        <h1>${article.title}</h1>
-        <p><strong>Author:</strong> ${article.author}</p>
-        <p><strong>Description:</strong> ${article.description}</p>
-        <p>${article.articleText}</p>
+        <h1>${title}</h1>
+        <p><strong>Author:</strong> ${author}</p>
+        <p><strong>Description:</strong> ${description}</p>
+        <p>${articleText}</p>
     `;
 
-    try {
-        // Send email to all approved users
-        await transporter.sendMail({
-            from: 'closed_briefing@macalesterstreet.org',
-            to: recipientEmails.join(','),
-            subject: `[Briefing Group] New Article: ${article.title}`,
-            html: emailContent,
-        });
-        console.log(`Article "${article.title}" emailed to approved users.`);
-    } catch (error) {
-        console.error('Error sending article email:', error);
-    }
-});
+    await transporter.sendMail({
+        from: mailConfig.auth.user,
+        to: recipientEmails.join(','),
+        subject: `[Briefing Group] New Article: ${title}`,
+        html: emailContent,
+    });
+
+    res.status(200).send('Article submitted and email sent to approved users.');
+}
